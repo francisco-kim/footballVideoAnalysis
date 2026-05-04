@@ -1,6 +1,9 @@
 from ultralytics import YOLO
 import supervision as sv
-import pickle, os
+import os, sys, pickle, cv2
+import numpy as np
+sys.path.append('../')
+from utils import GetBoundingBoxCentre, GetBoundingBoxWidth
 
 class Tracker:
     def __init__(self, modelPath):
@@ -73,3 +76,92 @@ class Tracker:
                 pickle.dump(tracks, f)
 
         print(detectionSupervision)
+    
+    def DrawEllipse(self, frame, boundingBox, colour, trackID=None):
+        y2 = int(boundingBox[3])
+
+        xCentre, _ = GetBoundingBoxCentre(boundingBox)
+        width = GetBoundingBoxWidth(boundingBox)
+
+        cv2.ellipse(
+            frame,
+            center=(xCentre, y2),
+            axes=(int(width), int(0.41 * width)),
+            angle=0.0,
+            startAngle=-45,
+            endAngle=235,
+            color=colour,
+            thickness=2,
+            lineType=cv2.LINE_4,
+        )
+
+        rectangleWidth = 41
+        rectangleHeight = 20
+        x1Rectangle = xCentre - rectangleWidth // 2
+        x2Rectangle = xCentre + rectangleWidth // 2
+        y1Rectangle = (y2 - rectangleHeight // 2) + 14
+        y2Rectangle = (y2 + rectangleHeight // 2) + 14
+
+        if trackID is not None:
+            cv2.rectangle(frame,
+                          (int(x1Rectangle), int(y1Rectangle)),
+                          (int(x2Rectangle), int(y2Rectangle)),
+                          colour,
+                          cv2.FILLED
+                          )
+
+            x1Text = x1Rectangle + 14
+            if trackID > 99:
+                x1Text -= 10
+
+            cv2.putText(
+                frame,
+                f"{trackID}",
+                (int(x1Text), int(y1Rectangle + 15)),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.6,
+                (0, 0, 0),
+                2
+            )
+
+        return frame
+
+    def DrawTriangle(self, frame, boundingBox, colour):
+        y = int(boundingBox[1])
+        x, _ = GetBoundingBoxCentre(boundingBox)
+
+        trianglePoints = np.array([
+            [x, y],
+            [x - 10, y -20],
+            [x + 10, y - 20],
+        ])
+        cv2.drawContours(frame, [trianglePoints], 0, colour, cv2.FILLED)
+        cv2.drawContours(frame, [trianglePoints], 0, (0, 0, 0), 2)
+
+        return frame
+
+    def DrawAnnotations(self, videoFrames, tracks):
+        outputVideoFrames = []
+
+        for frameIndex, frame in enumerate(videoFrames):
+            frame = frame.copy()
+
+            playerDictionary = tracks['players'][frameIndex]
+            refereeDictionary = tracks['referees'][frameIndex]
+            ballDictionary = tracks['ball'][frameIndex]
+
+            # Draw players
+            for trackID, player in playerDictionary.items():
+                frame = self.DrawEllipse(frame, player['bbox'], (0, 0, 255), trackID)
+
+            # Draw referees
+            for trackID, referee in playerDictionary.items():
+                frame = self.DrawEllipse(frame, referee['bbox'], (0, 255, 255))
+
+            # Draw referees
+            for trackID, ball in ballDictionary.items():
+                frame = self.DrawTriangle(frame, ball['bbox'], (0, 255, 0))
+
+            outputVideoFrames.append(frame)
+
+        return outputVideoFrames

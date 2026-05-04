@@ -9,8 +9,12 @@ def main():
     tracker = Tracker('./src/models/best_yolo11s.pt')
     tracks = tracker.GetObjectTracks(videoFrames, read_from_data=True, data_path='./data/track_data.pkl')
 
+    # Draw output
+    ## Draw object Tracks
+    outputVideoFrames = tracker.DrawAnnotations(videoFrames, tracks)
+
     # Save video
-    SaveVideo(videoFrames, './data/Bundesliga-output.mp4')
+    SaveVideo(outputVideoFrames, './data/Bundesliga-output.mp4')
 
 if __name__ == '__main__':
     main()
