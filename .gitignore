@@ -1,0 +1,9 @@
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+__pycache__/
+.venv
+venv
+data/*
+runs/*
+src/training/football-players-detection-1
+*.pt
