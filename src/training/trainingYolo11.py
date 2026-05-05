@@ -17,9 +17,9 @@ def main():
 
     model.train(
         data=str(DATASET_DIR / "data.yaml"),
-        epochs=100,
+        epochs=120,
         imgsz=640,
-        batch=16
+        batch=24
     )
 
 if __name__ == "__main__":

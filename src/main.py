@@ -1,7 +1,7 @@
 import cv2
 from utils import ReadVideo, SaveVideo
 from trackers import Tracker
-from teamAssigner import TeamAssigner
+from assigners import TeamAssigner
 
 def GetCroppedImageOfPlayer(videoFrames, tracks):
     for trackID, player in tracks['players'][0].items():
@@ -20,7 +20,8 @@ def main():
     videoFrames = ReadVideo('./data/Bundesliga.mp4')
 
     # Initialise Tracker
-    tracker = Tracker('./src/models/best_yolo11s.pt')
+    tracker = Tracker('./src/models/best_yolo11s_bach24_epoch120.pt')
+    
     tracks = tracker.GetObjectTracks(videoFrames, read_from_data=True, data_path='./data/track_data.pkl')
 
     # Interpolate ball positions
