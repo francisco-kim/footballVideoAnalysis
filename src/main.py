@@ -1,6 +1,7 @@
+import cv2
 from utils import ReadVideo, SaveVideo
 from trackers import Tracker
-import cv2
+from teamAssigner import TeamAssigner
 
 def GetCroppedImageOfPlayer(videoFrames, tracks):
     for trackID, player in tracks['players'][0].items():
@@ -24,6 +25,16 @@ def main():
 
     # Save cropped image of a player for clustering
     #GetCroppedImageOfPlayer(videoFrames, tracks)
+
+    # Assign player teams
+    teamAssigner = TeamAssigner()
+    teamAssigner.AssignTeamColour(videoFrames[0], tracks['players'][0])
+
+    for frameIndex, playerTrack in enumerate(tracks['players']):
+        for playerID, track in playerTrack.items():
+            team = teamAssigner.GetPlayerTeam(videoFrames[frameIndex], track['bbox'], playerID)
+            tracks['players'][frameIndex][playerID]['team'] = team
+            tracks['players'][frameIndex][playerID]['teamColour'] = teamAssigner.TeamColours[team]
 
     # Draw output
     ## Draw object Tracks

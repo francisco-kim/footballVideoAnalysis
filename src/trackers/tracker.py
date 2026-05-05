@@ -79,7 +79,6 @@ class Tracker:
     
     def DrawEllipse(self, frame, boundingBox, colour, trackID=None):
         y2 = int(boundingBox[3])
-
         xCentre, _ = GetBoundingBoxCentre(boundingBox)
         width = GetBoundingBoxWidth(boundingBox)
 
@@ -152,13 +151,14 @@ class Tracker:
 
             # Draw players
             for trackID, player in playerDictionary.items():
-                frame = self.DrawEllipse(frame, player['bbox'], (0, 0, 255), trackID)
+                colour = player.get('teamColour', (0, 0, 255))
+                frame = self.DrawEllipse(frame, player['bbox'], colour, trackID)
 
             # Draw referees
-            for trackID, referee in playerDictionary.items():
+            for trackID, referee in refereeDictionary.items():
                 frame = self.DrawEllipse(frame, referee['bbox'], (0, 255, 255))
 
-            # Draw referees
+            # Draw ball
             for trackID, ball in ballDictionary.items():
                 frame = self.DrawTriangle(frame, ball['bbox'], (0, 255, 0))
 
