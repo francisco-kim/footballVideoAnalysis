@@ -1,3 +1,3 @@
 # Football Video Analysis Project
 
-Football video analysis project inspired by the [Football Analysis Project](https://github.com/abdullahtarek/football_analysis).
+Football video analysis project inspired by the [Football Analysis Project](https://github.com/abdullahtarek/football_analysis) and the [Roboflow Sports](https://github.com/roboflow/sports/).
