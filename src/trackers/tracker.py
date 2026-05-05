@@ -2,6 +2,8 @@ from ultralytics import YOLO
 import supervision as sv
 import os, sys, pickle, cv2
 import numpy as np
+import pandas as pd
+
 sys.path.append('../')
 from utils import GetBoundingBoxCentre, GetBoundingBoxWidth
 
@@ -9,6 +11,42 @@ class Tracker:
     def __init__(self, modelPath):
         self.model = YOLO(modelPath)
         self.tracker = sv.ByteTrack()
+
+    def interpolateBallPositionsWithoutOutliners(self, ballPositions, remove_outliers=False):
+        ballPositions = [p.get(1, {}).get('bbox', []) for p in ballPositions]
+        positionsColumns = ['x1', 'y1', 'x2', 'y2']
+        dfBallPositions = pd.DataFrame(ballPositions, columns=positionsColumns)
+
+        # Remove outliers 
+        D_THRESHOLD = 70
+        if remove_outliers:
+            cx = (dfBallPositions['x1'] + dfBallPositions['x2']) / 2
+            cy = (dfBallPositions['y1'] + dfBallPositions['y2']) / 2
+
+            dx = cx.diff().abs()   # current minus previous
+            dy = cy.diff().abs()
+            distance = np.sqrt(dx**2 + dy**2)
+
+            outlier_mask = distance > D_THRESHOLD
+            dfBallPositions.loc[outlier_mask, positionsColumns] = np.nan
+            # first row distance is NaN; it stays untouched
+
+        # if remove_outliers:
+        #     Z_THRESHOLD = 3
+        #     WINDOW = 2
+        #     for column in positionsColumns:
+        #         rollingMean = dfBallPositions[column].rolling(window=WINDOW, center=True).mean()
+        #         rollingStd = dfBallPositions[column].rolling(window=WINDOW, center=True).std()
+        #         rollingZScores = np.abs((dfBallPositions[column] - rollingMean) / rollingStd)
+        #         dfBallPositions[column] = dfBallPositions[column].where(rollingZScores < Z_THRESHOLD, np.nan)
+
+        # Interpolate missing values
+        dfBallPositions = dfBallPositions.interpolate()
+        dfBallPositions = dfBallPositions.bfill()
+
+        ballPositions = [{1: {"bbox": p}} for p in dfBallPositions.to_numpy().tolist()]
+
+        return ballPositions
 
     def DetectFrames(self, frames):
         batchSize = 20

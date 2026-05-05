@@ -23,6 +23,9 @@ def main():
     tracker = Tracker('./src/models/best_yolo11s.pt')
     tracks = tracker.GetObjectTracks(videoFrames, read_from_data=True, data_path='./data/track_data.pkl')
 
+    # Interpolate ball positions
+    tracks["ball"] = tracker.interpolateBallPositionsWithoutOutliners(tracks["ball"], remove_outliers=False)
+
     # Save cropped image of a player for clustering
     #GetCroppedImageOfPlayer(videoFrames, tracks)
 
